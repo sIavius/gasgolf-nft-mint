@@ -15,14 +15,13 @@ contract NFTDrop {
 
     SaleConfig internal config;
 
-    function storageRead() internal view {
+    function storageRead() internal view returns (bool pausedVal, uint40 allowlistStartVal) {
         assembly {
             let word := sload(0)
-            let pausedVal := shr(240, word)
-            let allowlistStartVal := shr(200, word)
+            pausedVal := shr(240, word)
+            allowlistStartVal := shr(200, word)
             allowlistStartVal := and(0xffffffffff, allowlistStartVal) // 0xffffffffff - mask - (1 << w) - 1
-            // 0xffffffffff - 2^40 - 1 - 40-bit-number
+            // 0xffffffffff - (2^40 - 1) - 40-bit-number
         }
-        return (pausedVal, allowlistStartVal)
     }
 }
