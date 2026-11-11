@@ -1,66 +1,30 @@
-## Foundry
+# GasGolf NFT Mint
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+GasGolf is a Solidity project for exploring how storage layout and mint design affect gas costs in an ERC-721 NFT drop. It uses OpenZeppelin ERC721 as a baseline and Foundry for testing.
 
-Foundry consists of:
+## What's implemented
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **Sale phases:** the contract reports Closed, Allowlist, or Public based on the configured start times. Foundry tests cover the phase boundaries, including equal start times.
+- **Packed storage:** the sale configuration fits in one storage slot. A Yul reader extracts the pause flag and allowlist start time, and a test compares the result with ordinary Solidity field access.
+- **ERC-721 minting:** a test harness calls OpenZeppelin's internal mint function and checks the `Transfer` event, token ownership, and recipient balance.
 
-## Documentation
+The Yul reader takes the slot number from `config.slot`. When ERC721 inheritance moved the configuration from slot 0 to slot 6, the reader required no change.
 
-https://book.getfoundry.sh/
+Public sale minting, Merkle allowlist verification, and comparative gas benchmarks are planned. The mint test currently exercises the ERC-721 primitive through the test harness.
 
-## Usage
+## Run locally
 
-### Build
+With Git and Foundry installed:
 
-```shell
-$ forge build
+```sh
+git clone --recurse-submodules https://github.com/sIavius/gasgolf-nft-mint.git
+cd gasgolf-nft-mint
+forge test
 ```
 
-### Test
+To inspect the storage layout or run the same formatting check as CI:
 
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+```sh
+forge inspect src/NFTDropOZ.sol:NFTDrop storageLayout
+forge fmt --check
 ```
