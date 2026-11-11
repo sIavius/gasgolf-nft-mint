@@ -5,6 +5,7 @@ pragma solidity 0.8.38;
 import {NFTDrop} from "../src/NFTDropOZ.sol";
 import {Test} from "forge-std/Test.sol";
 import {SaleConfigReader} from "../src/libraries/SaleConfigReader.sol";
+import {IERC721} from "../lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
 contract NFTDropRead is Test {
     NFTDropChild NFTDropChildSample = new NFTDropChild();
@@ -14,7 +15,7 @@ contract NFTDropRead is Test {
     }
 
     function testDefaultStorageRead() public {
-        NFTDrop NFTDropSample = new NFTDrop();
+        NFTDrop NFTDropSample = new NFTDrop("testName", "testSymbol");
         bool _paused;
         uint40 _allowlistStart;
 
@@ -97,9 +98,17 @@ contract NFTDropRead is Test {
         assertEq(encodeStandart.length, 32);
         assertEq(encodePacked.length, 2);
     }
+
+    function testMint() public {
+        vm.expectEmit(address(NFTDropChildSample));
+        emit IERC721.Transfer(address(0), address(1), 7);
+        NFTDropChildSample.mintSample(address(1), 7);
+        assertEq(NFTDropChildSample.ownerOf(7), address(1));
+        assertEq(NFTDropChildSample.balanceOf(address(1)), 1);
+    }
 }
 
-contract NFTDropChild is NFTDrop {
+contract NFTDropChild is NFTDrop("testName", "testSymbol") {
     function childSetter(bool paused, uint40 allowlistStart, uint40 publicStart) public {
         config.paused = paused;
         config.allowlistStart = allowlistStart;
@@ -112,6 +121,10 @@ contract NFTDropChild is NFTDrop {
             _slotNumber := config.slot
         }
         return SaleConfigReader.storageRead(_slotNumber);
+    }
+
+    function mintSample(address to, uint256 tokenId) public {
+        _mint(to, tokenId);
     }
 }
 
